@@ -1,6 +1,6 @@
 # MiniSearch
 
-A simple and naive mini search engine in memory using TF IDF
+A simple and naive mini search engine in memory using TF IDF (PoC)
 
 ## Installation
 
