@@ -33,7 +33,7 @@ module MiniSearch
       end
     end
 
-    def search(raw_terms)
+    def search(raw_terms, operator: 'or')
       processed_terms = @querying_pipeline.execute(raw_terms)
 
       # gets the documents that matches each term
@@ -50,6 +50,7 @@ module MiniSearch
       documents = results_by_terms
         .flatten(1)
         .group_by { |document, _tf| document.fetch(:id) }
+        .select { |_document_id, documents| match_terms_according_operator?(documents, processed_terms, operator) }
         .map { |document_id, documents| [@documents.fetch(document_id), calculate_score(documents, idfs)] }
         .sort_by { |_document, score| -score }
         .map { |document, score| { document: document, score: score } }
@@ -57,8 +58,14 @@ module MiniSearch
 
     private
 
+    def match_terms_according_operator?(documents, terms, operator)
+      return true if operator == 'or'
+
+      documents.size == terms.size
+    end
+
     def calculate_score(documents, idfs)
-      tf_idf = documents
+      documents
         .map { |_document, tf| tf.fetch(:value) * idfs[tf.fetch(:term)] }
         .reduce(&:+)
     end

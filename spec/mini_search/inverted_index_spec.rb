@@ -4,7 +4,7 @@ RSpec.describe MiniSearch::InvertedIndex do
 
   subject { MiniSearch.new_index(stop_words, synonyms_map) }
 
-  it "indexes documents and searches them" do
+  it 'indexes documents and searches them' do
     subject.index(id: 1, indexed_field: 'red duck')
     subject.index(id: 2, indexed_field: 'yellow big dog')
     subject.index(id: 3, indexed_field: 'small cat')
@@ -33,7 +33,24 @@ RSpec.describe MiniSearch::InvertedIndex do
     ])
   end
 
-  it "preserves extra fields in documents" do
+  it 'indexes documents and searches them using AND operator' do
+    subject.index(id: 1, indexed_field: 'red duck')
+    subject.index(id: 2, indexed_field: 'yellow big dog')
+    subject.index(id: 3, indexed_field: 'small cat')
+    subject.index(id: 4, indexed_field: 'red monkey noisy')
+    subject.index(id: 5, indexed_field: 'small horse')
+    subject.index(id: 6, indexed_field: 'purple turtle')
+    subject.index(id: 7, indexed_field: 'tiny red spider')
+    subject.index(id: 8, indexed_field: 'big blue whale')
+    subject.index(id: 9, indexed_field: 'huge elephant')
+    subject.index(id: 10, indexed_field: 'red big cat')
+
+    expect(subject.search('red cat', operator: 'and')).to eq([
+      { document: { id: 10, indexed_field: 'red big cat' }, score: 0.4666666666666667 }
+    ])
+  end
+
+  it 'preserves extra fields in documents' do
     subject.index(id: 1, indexed_field: 'red duck', image: 'https://live.staticflickr.com/3229/2473722665_7720218d41_b.jpg')
 
     expect(subject.search('red cat')).to eq([
@@ -51,7 +68,7 @@ RSpec.describe MiniSearch::InvertedIndex do
   context 'using stop words' do
     let(:stop_words) { ['the', 'an'] }
 
-    it "uses stop words to remove common words" do
+    it 'uses stop words to remove common words' do
       subject.index(id: 1, indexed_field: 'the red duck')
       subject.index(id: 2, indexed_field: 'an yellow big dog')
       subject.index(id: 3, indexed_field: 'the golden horse')
@@ -74,7 +91,7 @@ RSpec.describe MiniSearch::InvertedIndex do
       }
     end
 
-    it "uses stop words to remove common words" do
+    it 'uses stop words to remove common words' do
       subject.index(id: 1, indexed_field: 'my best friend dog')
 
       expect(subject.search('doge')).to eq([
@@ -87,13 +104,13 @@ RSpec.describe MiniSearch::InvertedIndex do
     end
   end
 
-  it "returns an empty array when search does not match" do
+  it 'returns an empty array when search does not match' do
     subject.index(id: 10, indexed_field: 'red big cat')
 
     expect(subject.search('hippo')).to eq([])
   end
 
-  it "returns an empty array when index empty" do
+  it 'returns an empty array when index empty' do
     expect(subject.search('red cat')).to eq([])
   end
 end

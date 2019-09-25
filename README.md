@@ -59,8 +59,8 @@ The result will be something like:
 ]
 ```
 
-We can see results are sorted by score, notice that the document we index can have any other fields like name, price and etc.
-But only `:id` and `:indexed_field` are required
+We can see results are sorted by score, notice that the document we index can have any other 
+fields like name, price and etc. But only `:id` and `:indexed_field` are required
 
 ## Development
 
