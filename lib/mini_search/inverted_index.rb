@@ -20,6 +20,8 @@ module MiniSearch
     # }
     #
     def index(document)
+      remove(document.fetch(:id)) if @documents[document.fetch(:id)]
+
       @documents[document.fetch(:id)] = document
 
       terms = @indexing_pipeline.execute(document.fetch(:indexed_field))
@@ -31,6 +33,23 @@ module MiniSearch
           { term: term, value: Tf.calculate(term, terms) }
         ]
       end
+    end
+
+    # Removes a document by id from index and documents list
+    def remove(id)
+      document = @documents[id]
+
+      terms = @indexing_pipeline.execute(document.fetch(:indexed_field))
+
+      terms.each do |term|
+        @index[term] = @index[term].reject do |document, _tf|
+          document.fetch(:id) == id
+        end
+
+        @index.delete(term) if @index[term].size == 0
+      end
+
+      @documents.delete(id)
     end
 
     def search(raw_terms, operator: 'or')
