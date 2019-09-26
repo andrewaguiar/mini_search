@@ -2,7 +2,7 @@ RSpec.describe MiniSearch::InvertedIndex do
   let(:stop_words) { [] }
   let(:synonyms_map) { {} }
 
-  subject { MiniSearch.new_index(stop_words, synonyms_map) }
+  subject { MiniSearch.new_index(stop_words: stop_words, synonyms_map: synonyms_map) }
 
   it 'indexes documents and searches them' do
     subject.index(id: 1, indexed_field: 'red duck')
