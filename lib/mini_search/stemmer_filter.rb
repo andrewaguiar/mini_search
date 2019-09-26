@@ -9,9 +9,11 @@ module MiniSearch
     def execute(tokens)
       return tokens unless @stemmer
 
-      tokens.map do |token|
+      new_tokens = tokens.map do |token|
         @stemmer.stem(token)
       end
+
+      (new_tokens + tokens).uniq
     end
   end
 end

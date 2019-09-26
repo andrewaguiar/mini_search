@@ -18,18 +18,18 @@ RSpec.describe MiniSearch::InvertedIndex do
 
     expect(subject.search('red cat')).to eq([
       # 10 - matches both red and cat so it is the first
-      { document: { id: 10, indexed_field: 'red big cat' }, score: 0.4666666666666667 },
+      { document: { id: 10, indexed_field: 'red big cat' }, score: 0.8419095481027516 },
 
       # 3 - matches cat so it is the second as cat has a bigger IDF (it is more uncommon)
-      { document: { id: 3, indexed_field: 'small cat' }, score: 0.4 },
+      { document: { id: 3, indexed_field: 'small cat' }, score: 0.8047189562170501 },
 
       # 1 - matches red but has only 2 terms, so the red here has a bigger weight
-      { document: { id: 1, indexed_field: 'red duck' }, score: 0.3 },
+      { document: { id: 1, indexed_field: 'red duck' }, score: 0.45814536593707755 },
 
       # 4, 7 - both match red as well, but they have 3 terms, so red here has a lower frequency (tf)
       # comparing with 1
-      { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 0.19999999999999998 },
-      { document: { id: 7, indexed_field: 'tiny red spider' }, score: 0.19999999999999998 }
+      { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 0.3054302439580517 },
+      { document: { id: 7, indexed_field: 'tiny red spider' }, score: 0.3054302439580517 }
     ])
   end
 
@@ -46,7 +46,7 @@ RSpec.describe MiniSearch::InvertedIndex do
     subject.index(id: 10, indexed_field: 'red big cat')
 
     expect(subject.search('red cat', operator: 'and')).to eq([
-      { document: { id: 10, indexed_field: 'red big cat' }, score: 0.4666666666666667 }
+      { document: { id: 10, indexed_field: 'red big cat' }, score: 0.8419095481027516 }
     ])
   end
 
@@ -75,11 +75,11 @@ RSpec.describe MiniSearch::InvertedIndex do
       subject.index(id: 4, indexed_field: 'an strong ladybug')
 
       expect(subject.search('the duck')).to eq([
-        { document: { id: 1, indexed_field: 'the red duck' }, score: 0.375 },
+        { document: { id: 1, indexed_field: 'the red duck' }, score: 0.6931471805599453 },
       ])
 
       expect(subject.search('an ladybug')).to eq([
-        { document: { id: 4, indexed_field: 'an strong ladybug' }, score: 0.375 },
+        { document: { id: 4, indexed_field: 'an strong ladybug' }, score: 0.6931471805599453 },
       ])
     end
   end
