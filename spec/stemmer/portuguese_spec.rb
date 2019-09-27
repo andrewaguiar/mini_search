@@ -14,23 +14,65 @@ RSpec.describe MiniSearch::Stemmer::Portuguese do
     expect(subject.stem('gatona')).to eq('gat')
   end
 
-  it 'indexes documents and searches them' do
-    idx = MiniSearch.new_index(stemmer: ::MiniSearch::Stemmer::Portuguese.new)
+  context 'when using portuguese stemmer' do
+    subject { MiniSearch.new_localized_index(:pt) }
 
-    idx.index(id: 1, indexed_field: 'cachorro')
-    idx.index(id: 2, indexed_field: 'motor')
-    idx.index(id: 3, indexed_field: 'aneis')
+    before do
+      subject.index(id: 1, indexed_field: 'cachorro')
+      subject.index(id: 2, indexed_field: 'motor')
+      subject.index(id: 3, indexed_field: 'gatos')
+      subject.index(id: 4, indexed_field: 'gatinho')
+      subject.index(id: 5, indexed_field: 'aneis')
+    end
 
-    expect(idx.search('cachorrinhos')).to eq([
-      { document: { id: 1, indexed_field: 'cachorro' }, score: 0.5493061443340549 }
-    ])
+    it 'searches inhos ending word' do
+      expect(subject.search('cachorrinhos')).to eq(
+        documents: [
+          { document: { id: 1, indexed_field: 'cachorro' }, score: 0.8047189562170501 }
+        ],
+        idfs: {
+          'cachorr' => 1.6094379124341003
+        },
+        processed_terms: ['cachorr', 'cachorrinhos']
+      )
+    end
 
-    expect(idx.search('motores')).to eq([
-      { document: { id: 2, indexed_field: 'motor' }, score: 1.0986122886681098 }
-    ])
+    it 'searches res ending word' do
+      expect(subject.search('motores')).to eq(
+        documents: [
+          { document: { id: 2, indexed_field: 'motor' }, score: 1.6094379124341003 }
+        ],
+        idfs: {
+          'motor' => 1.6094379124341003
+        },
+        processed_terms: ['motor', 'motores']
+      )
+    end
 
-    expect(idx.search('anel')).to eq([
-      { document: { id: 3, indexed_field: 'aneis' }, score: 0.5493061443340549 }
-    ])
+    it 'searches eis ending word' do
+      expect(subject.search('anel')).to eq(
+        documents: [
+          { document: { id: 5, indexed_field: 'aneis' }, score: 0.8047189562170501 }
+        ],
+        idfs: {
+          'anel' => 1.6094379124341003
+        },
+        processed_terms: ['anel']
+      )
+    end
+
+    it 'searches by stemmed term but keeps relevance for original term' do
+      expect(subject.search('gatinho')).to eq(
+        documents: [
+          { document: { id: 4, indexed_field: 'gatinho' }, score: 1.2628643221541278 },
+          { document: { id: 3, indexed_field: 'gatos' }, score: 0.45814536593707755 }
+        ],
+        idfs: {
+          'gat' => 0.9162907318741551,
+          'gatinho' => 1.6094379124341003
+        },
+        processed_terms: ['gat', 'gatinho'],
+      )
+    end
   end
 end

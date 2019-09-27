@@ -73,6 +73,22 @@ module MiniSearch
         .map { |document_id, documents| [@documents.fetch(document_id), calculate_score(documents, idfs)] }
         .sort_by { |_document, score| -score }
         .map { |document, score| { document: document, score: score } }
+
+      { documents: documents, idfs: idfs, processed_terms: processed_terms }
+    end
+
+    def size
+      @documents.size
+    end
+
+    def stats
+      {
+        documents: @documents.size,
+        index: {
+          size: @index.size,
+          terms: @index.keys
+        }
+      }
     end
 
     private
