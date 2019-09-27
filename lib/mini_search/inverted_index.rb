@@ -9,6 +9,7 @@ module MiniSearch
       @querying_pipeline = querying_pipeline
       @documents = {}
       @index = {}
+      @document_length_average = 0.0
     end
 
     # Index a document, documents are simply Hashs with at least
@@ -22,9 +23,12 @@ module MiniSearch
     def index(document)
       remove(document.fetch(:id)) if @documents[document.fetch(:id)]
 
-      @documents[document.fetch(:id)] = document
-
       terms = @indexing_pipeline.execute(document.fetch(:indexed_field))
+
+      @documents[document.fetch(:id)] = {
+        document: document,
+        number_of_terms: terms.size.to_f
+      }
 
       @index = terms.each_with_object(@index) do |term, index|
         index[term] ||= []
@@ -33,11 +37,13 @@ module MiniSearch
           { term: term, value: Tf.calculate(term, terms) }
         ]
       end
+
+      calculate_document_length_average
     end
 
     # Removes a document by id from index and documents list
     def remove(id)
-      document = @documents[id]
+      document = @documents.dig(id, :document)
 
       terms = @indexing_pipeline.execute(document.fetch(:indexed_field))
 
@@ -49,7 +55,11 @@ module MiniSearch
         @index.delete(term) if @index[term].size == 0
       end
 
-      @documents.delete(id)
+      removed_document = @documents.delete(id)
+
+      calculate_document_length_average
+
+      removed_document
     end
 
     def search(raw_terms, operator: 'or')
@@ -64,15 +74,33 @@ module MiniSearch
 
       idfs = generate_idfs(processed_terms)
 
-      # For each document we calculate the score based on
-      # how many terms the document matched (the higher the best)
-      documents = results_by_terms
-        .flatten(1)
-        .group_by { |document, _tf| document.fetch(:id) }
-        .select { |_document_id, documents| match_terms_according_operator?(documents, processed_terms, operator) }
-        .map { |document_id, documents| [@documents.fetch(document_id), calculate_score(documents, idfs)] }
-        .sort_by { |_document, score| -score }
-        .map { |document, score| { document: document, score: score } }
+      # We flat and group by document id
+      any_term_matched_documents = results_by_terms.flatten(1).group_by do |document, _tf|
+        document.fetch(:id)
+      end
+
+      # We select documents based on operator
+      # if operator AND
+      #   we select only documents that matched all terms
+      # else
+      #   we select everthing
+      operator_specific_matched_documents = any_term_matched_documents.select do |_document_id, document_and_tfs|
+        match_terms_according_operator?(document_and_tfs,
+                                        processed_terms,
+                                        operator)
+      end
+
+      # map to a { document:, score: } structure.
+      document_and_scores = operator_specific_matched_documents.map do |document_id, document_and_tfs|
+        {
+          document: @documents.dig(document_id, :document),
+          score: calculate_score(@documents.fetch(document_id), document_and_tfs, idfs)
+        }
+      end
+
+      # sort by scores and wraps in a more convenient structure.
+      documents = document_and_scores
+        .sort_by { |item| -item[:score] }
 
       { documents: documents, idfs: idfs, processed_terms: processed_terms }
     end
@@ -93,16 +121,29 @@ module MiniSearch
 
     private
 
-    def match_terms_according_operator?(documents, terms, operator)
-      return true if operator == 'or'
+    def calculate_document_length_average
+      all_terms_size = @documents.values.map { |document| document[:number_of_terms].to_f }.reduce(&:+).to_f
 
-      documents.size == terms.size
+      @document_length_average = all_terms_size.to_f / @documents.size.to_f
     end
 
-    def calculate_score(documents, idfs)
-      documents
-        .map { |_document, tf| tf.fetch(:value) * idfs[tf.fetch(:term)] }
-        .reduce(&:+)
+    def match_terms_according_operator?(document_and_tfs, terms, operator)
+      return true if operator == 'or'
+
+      document_and_tfs.size == terms.size
+    end
+
+    def calculate_score(document, document_and_tfs, idfs)
+      terms_scores = document_and_tfs.map do |_document, tf|
+        Bm25.calculate(
+          tf: tf.fetch(:value),
+          idf: idfs[tf.fetch(:term)],
+          document_length: document[:number_of_terms],
+          document_length_average: @document_length_average
+        )
+      end
+
+      terms_scores.reduce(&:+)
     end
 
     def generate_idfs(processed_terms)

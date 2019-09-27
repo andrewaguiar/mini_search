@@ -12,6 +12,7 @@ require 'mini_search/pipeline.rb'
 require 'mini_search/inverted_index.rb'
 require 'mini_search/tf.rb'
 require 'mini_search/idf.rb'
+require 'mini_search/bm_25.rb'
 
 module MiniSearch
   LANGUAGE_SUPPORTS = {

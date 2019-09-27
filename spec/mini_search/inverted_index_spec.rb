@@ -19,22 +19,18 @@ RSpec.describe MiniSearch::InvertedIndex do
     expect(subject.search('red cat')).to eq(
       documents: [
         # 10 - matches both red and cat so it is the first
-        { document: { id: 10, indexed_field: 'red big cat' }, score: 0.8419095481027516 },
+        { document: { id: 10, indexed_field: 'red big cat' }, score: 2.726770362793935 },
 
         # 3 - matches cat so it is the second as cat has a bigger IDF (it is more uncommon)
-        { document: { id: 3, indexed_field: 'small cat' }, score: 0.8047189562170501 },
+        { document: { id: 3, indexed_field: 'small cat' }, score: 1.860138656065616 },
 
-        # 1 - matches red but has only 2 terms, so the red here has a bigger weight
-        { document: { id: 1, indexed_field: 'red duck' }, score: 0.45814536593707755 },
-
-        # 4, 7 - both match red as well, but they have 3 terms, so red here has a lower frequency (tf)
-        # comparing with 1
-        { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 0.3054302439580517 },
-        { document: { id: 7, indexed_field: 'tiny red spider' }, score: 0.3054302439580517 }
+        { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 0.630035123281377 },
+        { document: { id: 7, indexed_field: 'tiny red spider' }, score: 0.630035123281377 },
+        { document: { id: 1, indexed_field: 'red duck' }, score: 0.5589416657904823 }
       ],
       idfs: {
-        'cat' => 1.6094379124341003,
-        'red' => 0.9162907318741551
+        'cat' => 1.2237754316221157,
+        'red' => 0.36772478012531734
       },
       processed_terms: ['red', 'cat']
     )
@@ -54,11 +50,11 @@ RSpec.describe MiniSearch::InvertedIndex do
 
     expect(subject.search('red cat', operator: 'and')).to eq(
       documents: [
-        { document: { id: 10, indexed_field: 'red big cat' }, score: 0.8419095481027516 }
+        { document: { id: 10, indexed_field: 'red big cat' }, score: 2.726770362793935 }
       ],
       idfs: {
-        'cat' => 1.6094379124341003,
-        'red' => 0.9162907318741551
+        'cat' => 1.2237754316221157,
+        'red' => 0.36772478012531734
       },
       processed_terms: ['red', 'cat']
     )
@@ -69,10 +65,10 @@ RSpec.describe MiniSearch::InvertedIndex do
 
     expect(subject.search('red cat')).to eq(
       documents: [
-        { document: { id: 1, indexed_field: 'red duck', image: 'https://live.staticflickr.com/3229/2473722665_7720218d41_b.jpg' }, score: 0.0 }
+        { document: { id: 1, indexed_field: 'red duck', image: 'https://live.staticflickr.com/3229/2473722665_7720218d41_b.jpg' }, score: -1.8676408907357867 }
       ],
       idfs: {
-        'red' => 0.0
+        'red' => -1.0986122886681098
       },
       processed_terms: ['red', 'cat'],
     )
@@ -89,20 +85,20 @@ RSpec.describe MiniSearch::InvertedIndex do
 
       expect(subject.search('the duck')).to eq(
         documents: [
-          { document: { id: 1, indexed_field: 'the red duck' }, score: 0.6931471805599453 }
+          { document: { id: 1, indexed_field: 'the red duck' }, score: 1.3556765766195258 }
         ],
         idfs: {
-          'duck' => 1.3862943611198906
+          'duck' => 0.8472978603872037
         },
         processed_terms: ['duck']
       )
 
       expect(subject.search('an ladybug')).to eq(
         documents: [
-          { document: { id: 4, indexed_field: 'an strong ladybug' }, score: 0.6931471805599453 },
+          { document: { id: 4, indexed_field: 'an strong ladybug' }, score: 1.3556765766195258 },
         ],
         idfs: {
-          'ladybug' => 1.3862943611198906
+          'ladybug' => 0.8472978603872037
         },
         processed_terms: ['ladybug']
       )
@@ -121,20 +117,20 @@ RSpec.describe MiniSearch::InvertedIndex do
 
       expect(subject.search('doge')).to eq(
         documents: [
-          { document: { id: 1, indexed_field: 'my best friend dog' }, score: 0.0 }
+          { document: { id: 1, indexed_field: 'my best friend dog' }, score: -1.5929878185687592 }
         ],
         idfs: {
-          'dog' => 0.0
+          'dog' => -1.0986122886681098
         },
         processed_terms: ['doge', 'dog']
       )
 
       expect(subject.search('hound')).to eq(
         documents: [
-          { document: { id: 1, indexed_field: 'my best friend dog' }, score: 0.0 }
+          { document: { id: 1, indexed_field: 'my best friend dog' }, score: -1.5929878185687592 }
         ],
         idfs: {
-          'dog' => 0.0
+          'dog' => -1.0986122886681098
         },
         processed_terms: ['hound', 'dog']
       )

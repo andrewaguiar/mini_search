@@ -28,10 +28,10 @@ RSpec.describe MiniSearch::Stemmer::Portuguese do
     it 'searches inhos ending word' do
       expect(subject.search('cachorrinhos')).to eq(
         documents: [
-          { document: { id: 1, indexed_field: 'cachorro' }, score: 0.8047189562170501 }
+          { document: { id: 1, indexed_field: 'cachorro' }, score: 1.9775021196025977 }
         ],
         idfs: {
-          'cachorr' => 1.6094379124341003
+          'cachorr' => 1.0986122886681098
         },
         processed_terms: ['cachorr', 'cachorrinhos']
       )
@@ -40,10 +40,10 @@ RSpec.describe MiniSearch::Stemmer::Portuguese do
     it 'searches res ending word' do
       expect(subject.search('motores')).to eq(
         documents: [
-          { document: { id: 2, indexed_field: 'motor' }, score: 1.6094379124341003 }
+          { document: { id: 2, indexed_field: 'motor' }, score: 1.9775021196025977 }
         ],
         idfs: {
-          'motor' => 1.6094379124341003
+          'motor' => 1.0986122886681098
         },
         processed_terms: ['motor', 'motores']
       )
@@ -52,10 +52,10 @@ RSpec.describe MiniSearch::Stemmer::Portuguese do
     it 'searches eis ending word' do
       expect(subject.search('anel')).to eq(
         documents: [
-          { document: { id: 5, indexed_field: 'aneis' }, score: 0.8047189562170501 }
+          { document: { id: 5, indexed_field: 'aneis' }, score: 1.9775021196025977 }
         ],
         idfs: {
-          'anel' => 1.6094379124341003
+          'anel' => 1.0986122886681098
         },
         processed_terms: ['anel']
       )
@@ -64,12 +64,12 @@ RSpec.describe MiniSearch::Stemmer::Portuguese do
     it 'searches by stemmed term but keeps relevance for original term' do
       expect(subject.search('gatinho')).to eq(
         documents: [
-          { document: { id: 4, indexed_field: 'gatinho' }, score: 1.2628643221541278 },
-          { document: { id: 3, indexed_field: 'gatos' }, score: 0.45814536593707755 }
+          { document: { id: 4, indexed_field: 'gatinho' }, score: 2.583152145520781 },
+          { document: { id: 3, indexed_field: 'gatos' }, score: 0.6056500259181832 }
         ],
         idfs: {
-          'gat' => 0.9162907318741551,
-          'gatinho' => 1.6094379124341003
+          'gat' => 0.3364722366212129,
+          'gatinho' => 1.0986122886681098
         },
         processed_terms: ['gat', 'gatinho'],
       )
