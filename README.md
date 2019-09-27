@@ -1,10 +1,26 @@
 # MiniSearch
 
-A simple and naive mini search engine in memory using TF IDF (PoC)
+A simple and naive mini search engine in memory using BM25 algorithm.
 
-Minisearch implements BM25 algorithm
+MiniSearch implements a inverted index (basically a hashmap where terms are keys and values are documents that contains that key.
 
-## BM25
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'mini_search'
+```
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install mini_search
+
+## BM25 (from wikipedia)
 
 BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document, regardless 
 of their proximity within the document. It is a family of scoring functions with slightly different components and parameters.
@@ -34,33 +50,15 @@ Each summand can be given a floor of 0, to trim out common terms;
 The IDF function can be given a floor of a constant `e`, to avoid common terms being ignored at all;
 The IDF function can be replaced with a similarly shaped one which is non-negative, or strictly positive to avoid terms being ignored at all.
 
-## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'mini_search'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install mini_search
-
 ## Usage
 
 First we create an inverted Index
 
 ```ruby
   idx = MiniSearch.new_index
-```
 
-Then we index some documents (a document is a simple Hash with :id and :indexed_field in it)
+  # Then we index some documents (a document is a simple Hash with :id and :indexed_field in it)
 
-```ruby
   idx.index(id: 1, indexed_field: 'red duck')
   idx.index(id: 2, indexed_field: 'yellow big dog')
   idx.index(id: 3, indexed_field: 'small cat')
@@ -71,28 +69,37 @@ Then we index some documents (a document is a simple Hash with :id and :indexed_
   idx.index(id: 8, indexed_field: 'big blue whale')
   idx.index(id: 9, indexed_field: 'huge elephant')
   idx.index(id: 10, indexed_field: 'red big cat')
-```
 
-Then we can search for our documents
+  # Then we can search for our documents
 
-```ruby
   result = idx.search('RED  cat ')
-```
 
-The result will be something like:
+  # The result will be something like:
 
-```
-[
-  { document: { id: 10, indexed_field: 'red big cat' }, score: 0.4666666666666667 },
-  { document: { id: 3, indexed_field: 'small cat' }, score: 0.4 },
-  { document: { id: 1, indexed_field: 'red duck' }, score: 0.3 },
-  { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 0.19999999999999998 },
-  { document: { id: 7, indexed_field: 'tiny red spider' }, score: 0.19999999999999998 }
-]
+  puts result
+
+  # {
+  #   documents: [
+  #     { document: { id: 10, indexed_field: 'red big cat' }, score: 2.726770362793935 },
+  #     { document: { id: 3, indexed_field: 'small cat' }, score: 1.860138656065616 },
+  #     { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 0.630035123281377 },
+  #     { document: { id: 7, indexed_field: 'tiny red spider' }, score: 0.630035123281377 },
+  #     { document: { id: 1, indexed_field: 'red duck' }, score: 0.5589416657904823 }
+  #   ],
+  #   idfs: {
+  #     'cat' => 1.2237754316221157,
+  #     'red' => 0.36772478012531734
+  #   },
+  #   processed_terms: ['red', 'cat']
+  # }
 ```
 
 We can see results are sorted by score, notice that the document we index can have any other 
 fields like name, price and etc. But only `:id` and `:indexed_field` are required
+
+## Language support (stop words, stemmers)
+
+TODO
 
 ## Development
 
