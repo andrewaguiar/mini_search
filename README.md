@@ -6,9 +6,30 @@ Minisearch implements BM25 algorithm
 
 ## BM25
 
+BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document, regardless 
+of their proximity within the document. It is a family of scoring functions with slightly different components and parameters.
+One of the most prominent instantiations of the function is as follows.
+
+Given a query Q, containing keywords {\displaystyle q_{1},...,q_{n}}q_1, ..., q_n, the BM25 score of a document D is:
+
 ![BM25 Formula](formula1.svg)
 
+where `f(qi, D)` is qi's term frequency (tf) in the document `D`, `|D|` is the length of the document `D` in words, and avgdl is the 
+average document length in the text collection from which documents are drawn. `k1` and `b` are free parameters, usually chosen, in absence of
+an advanced optimization, as `k1 in |1.2,2.0|` and `b = 0.75`. `IDF(qi)` is the IDF (inverse document frequency) weight of the query term
+`qi`. It is usually computed as:
+
 ![IDF Formula](formula2.svg)
+
+where N is the total number of documents in the collection, and {\displaystyle n(q_{i})}n(q_i) is the number of documents containing {\displaystyle q_{i}}q_{i}.
+
+There are several interpretations for IDF and slight variations on its formula. In the original BM25 derivation, the IDF component is derived from the Binary Independence Model.
+
+The above formula for IDF has drawbacks for terms appearing in more than half of the corpus documents. These terms' IDF is negative, so for any two almost-identical documents, one which contains the term may be ranked lower than one which does not. This is often an undesirable behavior, so many applications adjust the IDF formula in various ways:
+
+Each summand can be given a floor of 0, to trim out common terms;
+The IDF function can be given a floor of a constant {\displaystyle \epsilon }\epsilon , to avoid common terms being ignored at all;
+The IDF function can be replaced with a similarly shaped one which is non-negative, or strictly positive to avoid terms being ignored at all.
 
 ## Installation
 
