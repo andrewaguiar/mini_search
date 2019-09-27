@@ -2,6 +2,14 @@
 
 A simple and naive mini search engine in memory using TF IDF (PoC)
 
+Minisearch implements BM25 algorithm
+
+## BM25
+
+![BM25 Formula](formula1.svg)
+
+![IDF Formula](formula2.svg)
+
 ## Installation
 
 Add this line to your application's Gemfile:
