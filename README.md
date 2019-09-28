@@ -20,7 +20,7 @@ Or install it yourself as:
 
     $ gem install mini_search
 
-## Inverse Index
+## Inverted Index
 
 MiniSearch implements a inverted index (basically a hashmap where terms are keys and values are documents that contains that key.
 
@@ -31,7 +31,7 @@ doc1 = 'The domestic dog is a member of the genus Canis, which forms part of the
 doc2 = 'The cat is a small carnivorous mammal. It is the only domesticated species in the family Felidae and often referred to as the domestic cat.
 ```
 
-To create an inverse index we start with an empty hashmap:
+To create an inverted index we start with an empty hashmap:
 
 ```
 ii = {}
@@ -110,10 +110,13 @@ def index(doc_id, doc, ii)
   # 1 - tokenizer
   tokens = doc.split(' ')
 
-  # 2 - downcase all tokens
+  # 2 - trim
+  tokens = tokens.map(&:strip)
+
+  # 3 - downcase all tokens
   tokens = tokens.map(&:downcase)
 
-  # 3 - remove punctuation
+  # 4 - remove punctuation
   tokens = tokens.map { |token| token.tr(',.!;:', '') }
 
   tokens.each { |token| ii[token] ||= []; ii[token] << doc_id }
@@ -159,8 +162,14 @@ With this changes our index would be:
 }
 ```
 
-Pretty better
+Pretty better now, we could apply other steps like removing some words that are irrelevant for us (stop words),
+add synonyms for some words but this other changes are specifics from languages.
 
+TODO
+
+## Language support (stop words, stemmers)
+
+TODO
 
 ## BM25 (from wikipedia)
 
@@ -238,15 +247,6 @@ First we create an inverted Index
 
 We can see results are sorted by score, notice that the document we index can have any other 
 fields like name, price and etc. But only `:id` and `:indexed_field` are required
-
-## Pipelines
-
-
-
-
-## Language support (stop words, stemmers)
-
-TODO
 
 ## Development
 

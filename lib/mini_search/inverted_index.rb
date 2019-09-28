@@ -4,11 +4,13 @@ module MiniSearch
   # Very simple and naive in-memory search engine
   # implements an inverted index
   class InvertedIndex
+    attr_accessor :inverted_index, :documents, :document_length_average, :indexing_pipeline, :querying_pipeline
+
     def initialize(indexing_pipeline, querying_pipeline)
       @indexing_pipeline = indexing_pipeline
       @querying_pipeline = querying_pipeline
       @documents = {}
-      @index = {}
+      @inverted_index = {}
       @document_length_average = 0.0
     end
 
@@ -30,7 +32,7 @@ module MiniSearch
         number_of_terms: terms.size.to_f
       }
 
-      @index = terms.each_with_object(@index) do |term, index|
+      @inverted_index = terms.uniq.each_with_object(@inverted_index) do |term, index|
         index[term] ||= []
         index[term] << [
           document,
@@ -39,6 +41,8 @@ module MiniSearch
       end
 
       calculate_document_length_average
+
+      document
     end
 
     # Removes a document by id from index and documents list
@@ -47,12 +51,12 @@ module MiniSearch
 
       terms = @indexing_pipeline.execute(document.fetch(:indexed_field))
 
-      terms.each do |term|
-        @index[term] = @index[term].reject do |document, _tf|
+      terms.uniq.each do |term|
+        @inverted_index[term] = @inverted_index[term].reject do |document, _tf|
           document.fetch(:id) == id
         end
 
-        @index.delete(term) if @index[term].size == 0
+        @inverted_index.delete(term) if @inverted_index[term].size == 0
       end
 
       removed_document = @documents.delete(id)
@@ -67,7 +71,7 @@ module MiniSearch
 
       # gets the documents that matches each term
       results_by_terms = processed_terms.map do |term|
-        @index[term] || []
+        @inverted_index[term] || []
       end
 
       return [] unless results_by_terms.any?
@@ -112,9 +116,9 @@ module MiniSearch
     def stats
       {
         documents: @documents.size,
-        index: {
-          size: @index.size,
-          terms: @index.keys
+        inverted_index: {
+          size: @inverted_index.size,
+          terms: @inverted_index.keys
         }
       }
     end
@@ -122,6 +126,8 @@ module MiniSearch
     private
 
     def calculate_document_length_average
+      return 0.0 if @documents.empty?
+
       all_terms_size = @documents.values.map { |document| document[:number_of_terms].to_f }.reduce(&:+).to_f
 
       @document_length_average = all_terms_size.to_f / @documents.size.to_f
