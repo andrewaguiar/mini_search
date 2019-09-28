@@ -20,6 +20,148 @@ Or install it yourself as:
 
     $ gem install mini_search
 
+## Inverse Index
+
+MiniSearch implements a inverted index (basically a hashmap where terms are keys and values are documents that contains that key.
+
+Lets take two small documents as examples:
+
+```
+doc1 = 'The domestic dog is a member of the genus Canis, which forms part of the wolf-like canids'
+doc2 = 'The cat is a small carnivorous mammal. It is the only domesticated species in the family Felidae and often referred to as the domestic cat.
+```
+
+To create an inverse index we start with an empty hashmap:
+
+```
+ii = {}
+```
+
+Now for a given document we transform its text in tokens (words):
+
+```
+doc1 = ["The", "domestic", "dog", "is", "a", "member", "of", "the", "genus", "Canis,", "which", "forms", "part", "of", "the", "wolf-like", "canids"]
+doc2 = ["The", "cat", "is", "a", "small", "carnivorous", "mammal.", "It", "is", "the", "only", "domesticated", "species", "in", "the", "family", "Felidae", "and", "often", "referred", "to", "as", "the", "domestic", "cat."]
+```
+
+We take each term and create use it as a key in are hashmap `ii` and the value will be a list with all documents containing that term.
+
+```
+def index(doc_id, doc, ii)
+  # 1 - tokenizer
+  tokens = doc.split(' ')
+
+  tokens.each { |token| ii[token] ||= []; ii[token] << doc_id }
+end
+
+ii = {}
+
+index(:doc1, doc1, ii)
+index(:doc2, doc2, ii)
+
+puts ii
+
+# {
+#   'The'          => [:doc1, :doc2],
+#   'domestic'     => [:doc1, :doc2],
+#   'dog'          => [:doc1],
+#   'is'           => [:doc1, :doc2],
+#   'a'            => [:doc1, :doc2],
+#   'member'       => [:doc1],
+#   'of'           => [:doc1, :doc1],
+#   'the'          => [:doc1, :doc2],
+#   'genus'        => [:doc1],
+#   'Canis,'       => [:doc1],
+#   'which'        => [:doc1],
+#   'forms'        => [:doc1],
+#   'part'         => [:doc1],
+#   'wolf-like'    => [:doc1],
+#   'canids'       => [:doc1],
+#   'cat'          => [:doc2],
+#   'small'        => [:doc2],
+#   'carnivorous'  => [:doc2],
+#   'mammal.'      => [:doc2],
+#   'It'           => [:doc2],
+#   'only'         => [:doc2],
+#   'domesticated' => [:doc2],
+#   'species'      => [:doc2],
+#   'in'           => [:doc2],
+#   'family'       => [:doc2],
+#   'Felidae'      => [:doc2],
+#   'and'          => [:doc2],
+#   'often'        => [:doc2],
+#   'referred'     => [:doc2],
+#   'to'           => [:doc2],
+#   'as'           => [:doc2],
+#   'cat.'         => [:doc2]
+# }
+```
+
+Now it is ease to perform any search, if we want to get all documents about `cat` we could simply take the term cat and see the list o documents
+in it `'cat' => [:doc2]`, if we want to search for 2 or more terms we can do the same `small cat` = `'cat' => [:doc2] and 'small' => [:doc2]`.
+
+Clearly we can improve our index performing some transformations in the tokens before indexing them. For instance we can see we have `cat` and `cat.`
+tokens, we have `The` and `the`. lets clean the data before indexing.
+
+Lets change our define an index pipeline that will be called everytime a document is indexed
+
+```
+def index(doc_id, doc, ii)
+  # 1 - tokenizer
+  tokens = doc.split(' ')
+
+  # 2 - downcase all tokens
+  tokens = tokens.map(&:downcase)
+
+  # 3 - remove punctuation
+  tokens = tokens.map { |token| token.tr(',.!;:', '') }
+
+  tokens.each { |token| ii[token] ||= []; ii[token] << doc_id }
+
+  # ... index
+end
+```
+
+With this changes our index would be:
+
+```
+{
+  'the' => [:doc1, :doc2],
+  'domestic' => [:doc1, :doc2],
+  'dog' => [:doc1],
+  'is' => [:doc1, :doc2],
+  'a' => [:doc1, :doc2],
+  'member' => [:doc1],
+  'of' => [:doc1],
+  'genus' => [:doc1],
+  'canis' => [:doc1],
+  'which' => [:doc1],
+  'forms' => [:doc1],
+  'part' => [:doc1],
+  'wolf-like' => [:doc1],
+  'canids' => [:doc1],
+  'cat' => [:doc2],
+  'small' => [:doc2],
+  'carnivorous' => [:doc2],
+  'mammal' => [:doc2],
+  'it' => [:doc2],
+  'only' => [:doc2],
+  'domesticated' => [:doc2],
+  'species' => [:doc2],
+  'in' => [:doc2],
+  'family' => [:doc2],
+  'felidae' => [:doc2],
+  'and' => [:doc2],
+  'often' => [:doc2],
+  'referred' => [:doc2],
+  'to' => [:doc2],
+  'as' => [:doc2]
+}
+```
+
+Pretty better
+
+
 ## BM25 (from wikipedia)
 
 BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document, regardless 
@@ -96,6 +238,11 @@ First we create an inverted Index
 
 We can see results are sorted by score, notice that the document we index can have any other 
 fields like name, price and etc. But only `:id` and `:indexed_field` are required
+
+## Pipelines
+
+
+
 
 ## Language support (stop words, stemmers)
 
