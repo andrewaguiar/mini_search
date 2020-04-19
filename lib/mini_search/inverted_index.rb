@@ -154,8 +154,8 @@ module MiniSearch
 
     def generate_idfs(processed_terms)
       processed_terms.each_with_object({}) do |term, idfs|
-        if @index[term].to_a.any?
-          idfs[term] = Idf.calculate(@index[term].size, @documents.size)
+        if @inverted_index[term].to_a.any?
+          idfs[term] = Idf.calculate(@inverted_index[term].size, @documents.size)
         end
       end
     end

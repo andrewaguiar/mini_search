@@ -248,6 +248,28 @@ First we create an inverted Index
 We can see results are sorted by score, notice that the document we index can have any other 
 fields like name, price and etc. But only `:id` and `:indexed_field` are required
 
+## Configuring multiple cores using yaml
+
+You can configure a multiple core using a yaml config file.
+
+```yaml
+cores:
+  - main:
+    lang: 'pt'
+    synonyms_map:
+      bebe: 'nene'
+    stop_words:
+      - 'de'
+      - 'para'
+  - aux:
+    lang: 'pt'
+    synonyms_map:
+      bebe: 'nene'
+    stop_words:
+      - 'de'
+      - 'para'
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

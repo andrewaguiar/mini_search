@@ -1,3 +1,4 @@
+require 'yaml'
 require 'mini_search/version.rb'
 require 'mini_search/stemmer/portuguese.rb'
 require 'mini_search/standard_whitespace_tokenizer.rb'
@@ -59,17 +60,39 @@ module MiniSearch
     new(indexing_pipeline, querying_pipeline)
   end
 
-  def self.new_localized_index(language_support, synonyms_map: {}, stop_words: [])
-    if language_support.is_a?(Symbol)
-      language_support = LANGUAGE_SUPPORTS[language_support].new(stop_words)
-    end
-
-    raise 'language support not found or nil' unless language_support
+  def self.new_localized_index(lang, synonyms_map: {}, stop_words: [])
+    language_support = find_language_support(lang, stop_words)
 
     new_index(
       stop_words: language_support.stop_words,
       stemmer: language_support.stemmer,
       synonyms_map: synonyms_map
     )
+  end
+
+  def self.from_config_file(file)
+    raise "file not found '#{file}'" unless File.exists?(file)
+
+    cores = YAML.load_file(file)['cores']
+
+    cores.map do |core|
+      lang = core['lang'].to_sym
+
+      new_localized_index(
+        lang,
+        stop_words: core['stop_words'],
+        synonyms_map: core['synonyms_map'].transform_values { |v| v.split(',') }
+      )
+    end
+  end
+
+  private_class_method def self.find_language_support(lang, stop_words)
+    if lang.is_a?(Symbol)
+      language_support = LANGUAGE_SUPPORTS[lang].new(stop_words)
+    end
+
+    raise 'language support not found or nil' unless language_support
+
+    language_support
   end
 end
