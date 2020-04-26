@@ -20,6 +20,36 @@ Or install it yourself as:
 
     $ gem install mini_search
 
+## BM25 (from wikipedia)
+
+BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document, regardless 
+of their proximity within the document. It is a family of scoring functions with slightly different components and parameters.
+One of the most prominent instantiations of the function is as follows.
+
+Given a query Q, containing keywords `q1....qn` the BM25 score of a document `D` is:
+
+![BM25 Formula](formula1.svg)
+
+where `f(qi, D)` is qi's term frequency (tf) in the document `D`, `|D|` is the length of the document `D` in words, and avgdl is the 
+average document length in the text collection from which documents are drawn. `k1` and `b` are free parameters, usually chosen, in absence of
+an advanced optimization, as `k1 in |1.2,2.0|` and `b = 0.75`. `IDF(qi)` is the IDF (inverse document frequency) weight of the query term
+`qi`. It is usually computed as:
+
+![IDF Formula](formula2.svg)
+
+where `N` is the total number of documents in the collection, and `n(q)` is the number of documents containing `qi`.
+
+There are several interpretations for IDF and slight variations on its formula. In the original BM25 derivation,
+the IDF component is derived from the Binary Independence Model.
+
+The above formula for IDF has drawbacks for terms appearing in more than half of the corpus documents. These terms' IDF is negative,
+so for any two almost-identical documents, one which contains the term may be ranked lower than one which does not. This is often an
+undesirable behavior, so many applications adjust the IDF formula in various ways:
+
+Each summand can be given a floor of 0, to trim out common terms;
+The IDF function can be given a floor of a constant `e`, to avoid common terms being ignored at all;
+The IDF function can be replaced with a similarly shaped one which is non-negative, or strictly positive to avoid terms being ignored at all.
+
 ## Inverted Index
 
 MiniSearch implements a inverted index (basically a hashmap where terms are keys and values are documents that contains that key.
@@ -165,42 +195,6 @@ With this changes our index would be:
 Pretty better now, we could apply other steps like removing some words that are irrelevant for us (stop words),
 add synonyms for some words but this other changes are specifics from languages.
 
-TODO
-
-## Language support (stop words, stemmers)
-
-TODO
-
-## BM25 (from wikipedia)
-
-BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document, regardless 
-of their proximity within the document. It is a family of scoring functions with slightly different components and parameters.
-One of the most prominent instantiations of the function is as follows.
-
-Given a query Q, containing keywords `q1....qn` the BM25 score of a document `D` is:
-
-![BM25 Formula](formula1.svg)
-
-where `f(qi, D)` is qi's term frequency (tf) in the document `D`, `|D|` is the length of the document `D` in words, and avgdl is the 
-average document length in the text collection from which documents are drawn. `k1` and `b` are free parameters, usually chosen, in absence of
-an advanced optimization, as `k1 in |1.2,2.0|` and `b = 0.75`. `IDF(qi)` is the IDF (inverse document frequency) weight of the query term
-`qi`. It is usually computed as:
-
-![IDF Formula](formula2.svg)
-
-where `N` is the total number of documents in the collection, and `n(q)` is the number of documents containing `qi`.
-
-There are several interpretations for IDF and slight variations on its formula. In the original BM25 derivation,
-the IDF component is derived from the Binary Independence Model.
-
-The above formula for IDF has drawbacks for terms appearing in more than half of the corpus documents. These terms' IDF is negative,
-so for any two almost-identical documents, one which contains the term may be ranked lower than one which does not. This is often an
-undesirable behavior, so many applications adjust the IDF formula in various ways:
-
-Each summand can be given a floor of 0, to trim out common terms;
-The IDF function can be given a floor of a constant `e`, to avoid common terms being ignored at all;
-The IDF function can be replaced with a similarly shaped one which is non-negative, or strictly positive to avoid terms being ignored at all.
-
 ## Usage
 
 First we create an inverted Index
@@ -247,6 +241,47 @@ First we create an inverted Index
 
 We can see results are sorted by score, notice that the document we index can have any other 
 fields like name, price and etc. But only `:id` and `:indexed_field` are required
+
+## Language support (stop words, stemmers)
+
+Creating an index using `MiniSearch.new_index` will gives an inverted_index that does not
+have any language support like stop_words and synonyms. We could pass them as arguments
+in `new_index` like:
+
+```
+index = MiniSearch.new_index(
+  stop_words: stop_words,
+  stemmer: stemmer,
+  synonyms_map: synonyms_map
+)
+```
+
+Arguments:
+
+  - The stop_words is a array of worlds that should be removed when indexing the document.
+  - The stemmer is a object of type Stemmer, that implements a `stem` method that remove all but the stem of the word (example: `carrocha` -> `carr`).
+  - The synonyms_map is a hashmap with original terms and a list of synonyms (example: `{'calçado' => ['sapato', 'tenis', 'salto', 'chinelo]}`)
+
+# Stemmers
+
+Stemmers are classes that implements the `def stem(word)` method, that receives a word and returs the stem:
+
+Example of a NaiveEnglishStemmer:
+
+```
+module MiniSearch
+  module Stemmer
+    class NaiveEnglishStemmer
+      def stem(word)
+        # removes plural
+        word[0..-2] if word.end_with?('s')
+      end
+    end
+  end
+end
+```
+
+MiniSearch comes with a Brazilian Portuguese stemmer for now.
 
 ## Configuring multiple cores using yaml
 
