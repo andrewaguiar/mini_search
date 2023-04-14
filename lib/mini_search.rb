@@ -2,6 +2,7 @@ require 'yaml'
 require 'mini_search/version.rb'
 require 'mini_search/stemmer/portuguese.rb'
 require 'mini_search/standard_whitespace_tokenizer.rb'
+require 'mini_search/ngram_tokenizer.rb'
 require 'mini_search/strip_filter.rb'
 require 'mini_search/remove_punctuation_filter.rb'
 require 'mini_search/downcase_filter.rb'
@@ -24,8 +25,12 @@ module MiniSearch
     MiniSearch::InvertedIndex.new(indexing_pipeline, querying_pipeline)
   end
 
-  def self.new_index(stop_words: [], synonyms_map: {}, stemmer: nil)
-    standard_whitespace_tokenizer = StandardWhitespaceTokenizer.new
+  def self.new_index(stop_words: [], synonyms_map: {}, stemmer: nil, ngrams: nil)
+    if ngrams
+      tokenizer = NgramTokenizer.new(ngrams)
+    else
+      tokenizer = StandardWhitespaceTokenizer.new
+    end
 
     strip_filter = StripFilter.new
     remove_punctuation_filter = RemovePunctuationFilter.new
@@ -35,7 +40,7 @@ module MiniSearch
     synonyms_filter = SynonymsFilter.new(synonyms_map)
 
     indexing_pipeline = Pipeline.new(
-      standard_whitespace_tokenizer,
+      tokenizer,
       [
         strip_filter,
         remove_punctuation_filter,
@@ -46,7 +51,7 @@ module MiniSearch
     )
 
     querying_pipeline = Pipeline.new(
-      standard_whitespace_tokenizer,
+      tokenizer,
       [
         strip_filter,
         remove_punctuation_filter,
@@ -60,13 +65,14 @@ module MiniSearch
     new(indexing_pipeline, querying_pipeline)
   end
 
-  def self.new_localized_index(lang, synonyms_map: {}, stop_words: [])
+  def self.new_localized_index(lang, synonyms_map: {}, stop_words: [], ngrams: nil)
     language_support = find_language_support(lang, stop_words)
 
     new_index(
       stop_words: language_support.stop_words,
       stemmer: language_support.stemmer,
-      synonyms_map: synonyms_map
+      synonyms_map: synonyms_map,
+      ngrams: ngrams
     )
   end
 

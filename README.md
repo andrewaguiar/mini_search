@@ -262,6 +262,29 @@ Arguments:
   - The stemmer is a object of type Stemmer, that implements a `stem` method that remove all but the stem of the word (example: `carrocha` -> `carr`).
   - The synonyms_map is a hashmap with original terms and a list of synonyms (example: `{'calçado' => ['sapato', 'tenis', 'salto', 'chinelo]}`)
 
+## n-gram Tokenizer
+
+By default creating an index using `MiniSearch.new_index` will gives an inverted_index that uses a simple whitespace tokenizer.
+(e.g. `"Hello World" => ["Hello", "World"]`)
+
+You can change this behavior to use an n-gram tokenizer which will break words down into smaller pieces with a configurable
+token window. You can read more about how this kind of tokenization works for [Elastic Search](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-ngram-tokenizer.html).
+(e.g. `ngrams: 2` the phrase `"Hello World" => ["He", "el", "ll", "lo", "o ", " W", "Wo", "or", "rl", "ld"]`)
+or
+(e.g. `ngrams: 3` the phrase `"Hello World" => ["Hel", "ell", "llo", "lo ", "o W", " Wo", "Wor", "orl", "rld"]`)
+
+To enable this simply pass an integer for the parameter `ngrams`.
+
+```
+index = MiniSearch.new_index(
+  ngrams: 2,
+)
+```
+
+Arguments:
+
+- ngrams: An integer which represents the amount of characters each token should be. Common paramaeters are: (`2` for bigrams or `3` for trigrams)
+
 # Stemmers
 
 Stemmers are classes that implements the `def stem(word)` method, that receives a word and returs the stem:

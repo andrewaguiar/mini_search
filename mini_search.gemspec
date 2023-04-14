@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 2.4.10"
   spec.add_development_dependency "rake", "~> 12.0"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_runtime_dependency "ruby_ngrams", "~> 0.0.6"
 end
