@@ -8,6 +8,8 @@ module MiniSearch
       @n = n
     end
     def execute(string)
+      # In the future, we may want to consider doing a strip on tokens to remove
+      # whitespace.
       string.ngrams(regex: //, n: @n).map(&:join)
     end
   end

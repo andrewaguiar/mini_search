@@ -174,27 +174,24 @@ RSpec.describe MiniSearch::InvertedIndex do
       expect(subject.search('red cat')).to eq(
         documents: [
           # 10 - matches both red and cat so it is the first
-          { document: { id: 10, indexed_field: 'red big cat' }, score: 5.2417439118759885 },
+          { document: { id: 10, indexed_field: 'red big cat' }, score: 5.679142860867156 },
 
           # 3 - matches cat so it is the second as cat has a bigger IDF (it is more uncommon)
           { document: { id: 3, indexed_field: 'small cat' }, score: 3.87904607207589 },
 
-          { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 1.1405919495816859 },
-          { document: { id: 7, indexed_field: 'tiny red spider' }, score: 1.0860322829565763 },
-          { document: { id: 1, indexed_field: 'red duck' }, score: 0.7321317426855942 },
-
-          # Pulls in an extra document because of ngramming ("d" in dog)
-          { document: { id: 2, indexed_field: 'yellow big dog' }, score: 0.0 },
+          { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 1.7108879243725288 },
+          { document: { id: 7, indexed_field: 'tiny red spider' }, score: 1.6290484244348644 },
+          { document: { id: 1, indexed_field: 'red duck' }, score: 1.0981976140283913 },
         ],
         idfs: {
+          ' c' => 1.2237754316221157,
           'at' => 1.2237754316221157,
-          'c' => 1.2237754316221157,
           'ca' => 1.2237754316221157,
-          'd' => 0.0,
+          'd ' => 0.36772478012531734,
           'ed' => 0.36772478012531734,
           're' => 0.36772478012531734
         },
-        processed_terms: ['re', 'ed', 'd', 'c', 'ca', 'at']
+        processed_terms: ['re', 'ed', 'd ', ' c', 'ca', 'at']
       )
     end
 
