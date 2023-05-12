@@ -1,8 +1,9 @@
 RSpec.describe MiniSearch::InvertedIndex do
   let(:stop_words) { [] }
   let(:synonyms_map) { {} }
+  let(:ngrams) { nil }
 
-  subject { MiniSearch.new_index(stop_words: stop_words, synonyms_map: synonyms_map) }
+  subject { MiniSearch.new_index(stop_words: stop_words, synonyms_map: synonyms_map, ngrams: ngrams) }
 
   it 'indexes documents and searches them' do
     subject.index(id: 1, indexed_field: 'red duck')
@@ -154,4 +155,46 @@ RSpec.describe MiniSearch::InvertedIndex do
       processed_terms: ['red', 'cat']
     )
   end
+
+  context 'using ngrams' do
+    let(:ngrams) { 2 }
+
+    it 'uses ngram tokenizer if ngrams is not nil' do
+      subject.index(id: 1, indexed_field: 'red duck')
+      subject.index(id: 2, indexed_field: 'yellow big dog')
+      subject.index(id: 3, indexed_field: 'small cat')
+      subject.index(id: 4, indexed_field: 'red monkey noisy')
+      subject.index(id: 5, indexed_field: 'small horse')
+      subject.index(id: 6, indexed_field: 'purple turtle')
+      subject.index(id: 7, indexed_field: 'tiny red spider')
+      subject.index(id: 8, indexed_field: 'big blue whale')
+      subject.index(id: 9, indexed_field: 'huge elephant')
+      subject.index(id: 10, indexed_field: 'red big cat')
+
+      expect(subject.search('red cat')).to eq(
+        documents: [
+          # 10 - matches both red and cat so it is the first
+          { document: { id: 10, indexed_field: 'red big cat' }, score: 5.679142860867156 },
+
+          # 3 - matches cat so it is the second as cat has a bigger IDF (it is more uncommon)
+          { document: { id: 3, indexed_field: 'small cat' }, score: 3.87904607207589 },
+
+          { document: { id: 4, indexed_field: 'red monkey noisy' }, score: 1.7108879243725288 },
+          { document: { id: 7, indexed_field: 'tiny red spider' }, score: 1.6290484244348644 },
+          { document: { id: 1, indexed_field: 'red duck' }, score: 1.0981976140283913 },
+        ],
+        idfs: {
+          ' c' => 1.2237754316221157,
+          'at' => 1.2237754316221157,
+          'ca' => 1.2237754316221157,
+          'd ' => 0.36772478012531734,
+          'ed' => 0.36772478012531734,
+          're' => 0.36772478012531734
+        },
+        processed_terms: ['re', 'ed', 'd ', ' c', 'ca', 'at']
+      )
+    end
+
+  end
+
 end
