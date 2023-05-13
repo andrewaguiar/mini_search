@@ -3,6 +3,7 @@ require 'mini_search/version.rb'
 require 'mini_search/stemmer/portuguese.rb'
 require 'mini_search/standard_whitespace_tokenizer.rb'
 require 'mini_search/ngram_tokenizer.rb'
+require 'mini_search/compound_tokenizer.rb'
 require 'mini_search/strip_filter.rb'
 require 'mini_search/remove_punctuation_filter.rb'
 require 'mini_search/downcase_filter.rb'
@@ -26,11 +27,12 @@ module MiniSearch
   end
 
   def self.new_index(stop_words: [], synonyms_map: {}, stemmer: nil, ngrams: nil)
-    if ngrams
-      tokenizer = NgramTokenizer.new(ngrams)
-    else
-      tokenizer = StandardWhitespaceTokenizer.new
-    end
+    tokenizer =
+      if ngrams
+        NgramTokenizer.new(ngrams)
+      else
+        StandardWhitespaceTokenizer.new
+      end
 
     strip_filter = StripFilter.new
     remove_punctuation_filter = RemovePunctuationFilter.new
